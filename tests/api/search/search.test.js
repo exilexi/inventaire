@@ -3,7 +3,7 @@ const __ = CONFIG.universalPath
 const _ = __.require('builders', 'utils')
 require('should')
 const faker = require('faker')
-const { Promise } = __.require('lib', 'promises')
+const { Promise, wait } = __.require('lib', 'promises')
 const { nonAuthReq, authReq, undesiredRes, getUser } = require('../utils/utils')
 const randomString = __.require('lib', './utils/random_string')
 const { createWork, createHuman, createSerie, randomLabel, createEditionFromWorks } = require('../fixtures/entities')
@@ -247,10 +247,35 @@ describe('search:global', () => {
       .catch(done)
     })
   })
+
+  describe('filter', () => {
+    it('should reject an invalid filter', done => {
+      search('humans', 'yo', 'foo')
+      .then(undesiredRes(done))
+      .catch(err => {
+        err.statusCode.should.equal(400)
+        err.body.status_verbose.should.startWith('invalid filter: foo')
+        done()
+      })
+      .catch(done)
+    })
+
+    it('should accept a filter parameter', async () => {
+      const author = await createHuman({ labels: { fr: 'Gilles Deleuze' } })
+      await wait(2000)
+      const results = await search('humans', 'Gilles Deleuze', 'inv')
+      results.should.be.an.Array()
+      const ids = _.map(results, 'id')
+      ids.should.containEql(author._id)
+      ids.should.not.containEql('Q184226')
+    })
+  })
 })
 
-const search = (types, search) => {
+const search = (types, search, filter) => {
   search = encodeURIComponent(search)
-  return nonAuthReq('get', `/api/search?search=${search}&types=${types}&lang=fr&limit=50`)
+  let url = `/api/search?search=${search}&types=${types}&lang=fr&limit=50`
+  if (filter) url += `&filter=${filter}`
+  return nonAuthReq('get', url)
   .get('results')
 }
