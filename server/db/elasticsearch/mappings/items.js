@@ -14,7 +14,8 @@ module.exports = {
           'entity:title': string,
           'entity:subtitle': string,
           'entity:authors': string,
-          'entity:series': string
+          'entity:series': string,
+          'entity:lang': keyword
         }
       }
     }
