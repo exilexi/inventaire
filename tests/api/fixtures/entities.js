@@ -89,6 +89,11 @@ const API = module.exports = {
     return API.createEdition({ work })
   },
 
+  createEditionWithWorkAndAuthor: async () => {
+    const work = await API.createWorkWithAuthor()
+    return API.createEdition({ work })
+  },
+
   createItemFromEntityUri: (uri, data = {}) => {
     return authReq('post', '/api/items', Object.assign({}, data, { entity: uri }))
   },
